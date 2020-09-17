@@ -1,0 +1,3243 @@
+USE [DB_A3450E_TicketPlanet]
+GO
+/****** Object:  StoredProcedure [dbo].[IspFetchMoviePrice]    Script Date: 23/12/2019 6:43:41 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+--1796 09:10:00
+--SELECT GETUTCDATE()       ',select CONVERT (time, GETUTCDATE());  
+--exec IspFetchMoviePrice '2',1,3,'2019-06-07','1867','Coupon','05:00:00','21:10:00'
+ALTER PROCEDURE [dbo].[IspFetchMoviePrice]
+	@MovieCategory varchar(2),
+	@NoOfPersons int,
+	@CinemaCompanyID int,
+	@Date date,
+	@filmCode varchar(20),
+	@CouponValue varchar(40) = null,
+	@CutOffTime time ='16',
+	@psMovieTime time
+AS
+BEGIN
+--select GETUTCDATE()
+			Declare @PassedTime int;
+			Set @PassedTime =  datepart(hour, @psMovieTime)
+			
+	
+			Declare @CurrentTime int;
+			Set @CurrentTime =16
+
+			DECLARE @dayName VARCHAR(9);
+			SET @dayName = DATEName(DW, @Date);
+
+			declare @Pricing decimal(18,2)
+			declare @Amount decimal(18,2)
+
+			
+			----Avengers
+			--if CAST(@Date as date) = '2019-05-29'
+			--begin
+			--if(@filmCode in ('1625','372','580','613','1599','1555','1849','1539') and @MovieCategory =1)
+			--begin
+			--select @Amount = 2500 * @NoOfPersons
+			--		 select	@Amount Price 
+			--		 return
+			--end
+			--end
+
+
+			if @CinemaCompanyID in(10,11)
+			---film house price
+			
+			begin
+			if @MovieCategory =1
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							
+							begin
+							select @Pricing  = WeekendPrice from tk_FilmHouse_Film where Code =@filmCode
+								select @Amount = @Pricing * @NoOfPersons
+							end
+						else
+							begin
+								IF(@dayName = 'Wednesday')
+									begin
+										begin
+											select @Pricing  = WeekDayPrice from tk_FilmHouse_Film where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										--IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										--begin
+										--	select @Pricing = promoDayPrice from tk_FilmHouse_Film where Code =@filmCode
+										--	select @Amount = @Pricing * @NoOfPersons
+										--end
+										--else
+										--begin
+										--	select @Pricing = promoDayPrice from tk_FilmHouse_Film where Code =@filmCode
+										--	select @Amount = @Pricing * @NoOfPersons
+										--end 
+									end
+								else
+								begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+											begin
+											select @Pricing  = WeekDayPrice from tk_FilmHouse_Film where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+									else
+											begin
+											select @Pricing  = WeekDayPrice from tk_FilmHouse_Film where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+								end
+							end
+
+					end
+			if @MovieCategory =2
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+							select @Pricing  = WeekEndCutOffPrice from tk_FilmHouse_Film where Code =@filmCode
+								select @Amount = @Pricing * @NoOfPersons
+							end
+						else
+							begin
+								IF(@dayName = 'Wednesday')
+									begin
+										--IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										--begin
+										--	select @Pricing = promoDayPrice from tk_FilmHouse_Film where Code =@filmCode
+										--	select @Amount = @Pricing * @NoOfPersons
+										--end
+										--else
+										--begin
+										--	select @Pricing = promoDayPrice from tk_FilmHouse_Film where Code =@filmCode
+										--	select @Amount = @Pricing * @NoOfPersons
+										--end 
+										select @Pricing  = WeekDayCutOffPrice from tk_FilmHouse_Film where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+								else
+									begin
+										
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+											begin
+											select @Pricing  = WeekDayPrice from tk_FilmHouse_Film where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										else
+											begin
+											select @Pricing  = WeekDayPrice from tk_FilmHouse_Film where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+									end
+							end
+					end
+			end
+
+			 if @CinemaCompanyID =1 
+			 begin
+				if @MovieCategory =1
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+								IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing  = WeekEndCutOffPrice from tk_GenesisPalmsFilms where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing  = WeekendPrice from tk_GenesisPalmsFilms where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+								else
+									begin
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing  = WeekEndCutOffPrice from tk_GenesisPalmsFilms where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing  = WeekendPrice from tk_GenesisPalmsFilms where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+							end
+						else
+							begin
+								IF(@dayName = 'Wednesday')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select promoDayPrice from tk_GenesisPalmsFilms where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisPalmsFilms where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+									 begin
+										IF(@dayName = 'Testing')
+											begin
+												IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+												begin
+													select @Pricing = publicHolidayPrice from tk_GenesisPalmsFilms where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+												end
+												else
+												begin
+													select @Pricing = publicHolidayPrice from tk_GenesisPalmsFilms where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+												end
+											end
+										else
+										begin
+											IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+											begin
+
+													if @PassedTime > @CurrentTime
+													begin
+													select @Pricing  = WeekDayCutOffPrice from tk_GenesisPalmsFilms where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+													else
+													begin
+													select @Pricing  = WeekDayPrice from tk_GenesisPalmsFilms where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+												end
+											else
+											begin
+												if @PassedTime > @CurrentTime
+													begin
+													select @Pricing  = WeekDayCutOffPrice from tk_GenesisPalmsFilms where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+												else
+													begin
+													select @Pricing  = WeekDayPrice from tk_GenesisPalmsFilms where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+											end
+										end
+									end
+									
+							end
+							
+
+					end
+
+				if @MovieCategory =4
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing  = WeekEndCutOffVipPrice from tk_GenesisPalmsFilms where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing  = WeekEndVIPPrice from tk_GenesisPalmsFilms where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing  = WeekEndVIPPrice from tk_GenesisPalmsFilms where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+						else
+							begin
+								IF(@dayName = 'Wednesday')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisPalmsFilms where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisPalmsFilms where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+									begin
+										IF(@dayName = 'Testing')
+											begin
+												IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+												begin
+													select @Pricing = publicHolidayPrice from tk_GenesisPalmsFilms where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+												end
+												else
+												begin
+													select @Pricing = publicHolidayPrice from tk_GenesisPalmsFilms where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+												end
+											end
+										else
+										begin
+											IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+												begin
+
+												if @PassedTime > @CurrentTime
+													begin
+													select @Pricing  = WeekDayCutOffVipPrice from tk_GenesisPalmsFilms where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+												else
+													begin
+													select @Pricing  = WeekDayVIPPrice from tk_GenesisPalmsFilms where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+												end
+											else
+												begin
+												if @PassedTime > @CurrentTime
+													begin
+													select @Pricing  = WeekDayCutOffVipPrice from tk_GenesisPalmsFilms where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+												else
+													begin
+													select @Pricing  = WeekDayVIPPrice from tk_GenesisPalmsFilms where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+												end
+										end
+									end
+							end
+					end
+
+				if @MovieCategory =2
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing  = WeekEndCutOffComboPrice from tk_GenesisPalmsFilms where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing  = WeekEndComboPrice from tk_GenesisPalmsFilms where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing  = WeekEndComboPrice from tk_GenesisPalmsFilms where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+						else
+							begin
+								IF(@dayName = 'Wednesday')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+											begin
+
+													if @PassedTime > @CurrentTime
+													begin
+													select @Pricing  = WeekDayCutOffComboPrice from tk_GenesisPalmsFilms where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+													else
+													begin
+													select @Pricing  = WeekDayComboPrice from tk_GenesisPalmsFilms where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+											end
+										else
+											begin
+												if @PassedTime > @CurrentTime
+												begin
+												select @Pricing  = WeekDayCutOffComboPrice from tk_GenesisPalmsFilms where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+												end
+												else
+												begin
+												select @Pricing  = WeekDayComboPrice from tk_GenesisPalmsFilms where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+												end
+											end 
+									end
+								else
+									begin
+										if(@dayName = 'Testing')
+											begin
+													IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+
+													begin
+														select @Pricing = WeekDayComboPrice from tk_GenesisPalmsFilms where Code =@filmCode
+														select @Amount = @Pricing * @NoOfPersons
+													end
+													else
+													begin
+														select @Pricing = WeekDayComboPrice from tk_GenesisPalmsFilms where Code =@filmCode
+														select @Amount = @Pricing * @NoOfPersons
+													end
+											end
+										else
+										begin
+											IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+												begin
+
+													if @PassedTime > @CurrentTime
+													begin
+														select @Pricing  = WeekDayCutOffComboPrice from tk_GenesisPalmsFilms where Code =@filmCode
+														select @Amount = @Pricing * @NoOfPersons
+													end
+													else
+													begin
+														select @Pricing  = WeekDayComboPrice from tk_GenesisPalmsFilms where Code =@filmCode
+														select @Amount = @Pricing * @NoOfPersons
+													end
+												end
+											else
+												begin
+													if @PassedTime > @CurrentTime
+													begin
+														select @Pricing  = WeekDayCutOffComboPrice from tk_GenesisPalmsFilms where Code =@filmCode
+														select @Amount = @Pricing * @NoOfPersons
+													end
+													else
+													begin
+														select @Pricing  = WeekDayComboPrice from tk_GenesisPalmsFilms where Code =@filmCode
+														select @Amount = @Pricing * @NoOfPersons
+													end
+												end
+							
+										end
+									end
+									
+							end
+					end
+
+				if @MovieCategory =3
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+								IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing  = WeekEndCutOff3D from tk_GenesisPalmsFilms where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing =  WeekEndThreeDPrice from tk_GenesisPalmsFilms where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+								else
+									begin
+										select @Pricing = WeekEndThreeDPrice from tk_GenesisPalmsFilms where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+						else
+							begin
+								IF(@dayName = 'Wednesday')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisPalmsFilms where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisPalmsFilms where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+									begin
+											IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+												begin
+
+													if @PassedTime > @CurrentTime
+													begin
+													select @Pricing  = WeekDayCutOff3D from tk_GenesisPalmsFilms where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+													else
+													begin
+													select @Pricing  = WeekDayThreeDPrice from tk_GenesisPalmsFilms where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+												end
+											else
+												begin
+													if @PassedTime > @CurrentTime
+													begin
+													select @Pricing  = WeekDayCutOff3D from tk_GenesisPalmsFilms where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+													else
+													begin
+													select @Pricing  = WeekDayThreeDPrice from tk_GenesisPalmsFilms where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+												end
+							
+										end
+									
+							end
+					end
+
+			 end
+
+
+			  if @CinemaCompanyID =2 
+			 begin
+				 if @MovieCategory =1
+					begin
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+								IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOffPrice from tk_GenesisPortHarcourt where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing =  WeekendPrice from tk_GenesisPortHarcourt where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+								else
+									begin
+										select @Pricing =  WeekendPrice from tk_GenesisPortHarcourt where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+						else
+							begin
+								IF(@dayName = 'Wednesday')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisPortHarcourt where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisPortHarcourt where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+									begin
+										IF(@dayName = 'Testing')
+											begin
+												IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+												begin
+													select @Pricing = publicHolidayPrice from tk_GenesisPortHarcourt where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+												end
+												else
+												begin
+													select @Pricing = publicHolidayPrice from tk_GenesisPortHarcourt where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+												end
+											end
+										else
+										begin
+											IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+												begin
+
+													if @PassedTime > @CurrentTime
+													begin
+													select @Pricing = WeekDayCutOffPrice from tk_GenesisPortHarcourt where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+													else
+													begin
+													select @Pricing = WeekDayPrice from tk_GenesisPortHarcourt where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+												end
+												else
+												begin
+													if @PassedTime > @CurrentTime
+													begin
+													select @Pricing = WeekDayCutOffPrice from tk_GenesisPortHarcourt where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+													else
+													begin
+													select @Pricing = WeekDayPrice from tk_GenesisPortHarcourt where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+												end
+										end
+									end
+							end
+
+					end
+
+				 if @MovieCategory =2
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+								IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+											begin
+												select @Pricing = WeekEndCutOffComboPrice from tk_GenesisPortHarcourt where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+											end
+										else
+											begin
+												select @Pricing = WeekEndComboPrice from tk_GenesisPortHarcourt where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+											end
+									end
+								else
+									begin
+
+										if @PassedTime > @CurrentTime
+											begin
+												select @Pricing = WeekEndCutOffComboPrice from tk_GenesisPortHarcourt where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+											end
+										else
+											begin
+												select @Pricing = WeekEndComboPrice from tk_GenesisPortHarcourt where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+											end
+									end
+							end
+						else
+							begin
+								IF(@dayName = 'Wednesday')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+											begin
+
+											if @PassedTime > @CurrentTime
+												begin
+													select @Pricing = WeekDayCutOffComboPrice from tk_GenesisPortHarcourt where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+												end
+											else
+												begin
+													select @Pricing = WeekDayComboPrice from tk_GenesisPortHarcourt where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+												end
+										end
+										else
+											begin
+												if @PassedTime > @CurrentTime
+													begin
+														select @Pricing = WeekDayCutOffComboPrice from tk_GenesisPortHarcourt where Code =@filmCode
+														select @Amount = @Pricing * @NoOfPersons
+													end
+												else
+													begin
+														select @Pricing = WeekDayComboPrice from tk_GenesisPortHarcourt where Code =@filmCode
+														select @Amount = @Pricing * @NoOfPersons
+													end
+											end 
+									end
+								else
+									begin
+										if(@dayName = 'Testing')
+											begin
+													IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+
+													begin
+														select @Pricing = WeekDayComboPrice from tk_GenesisPortHarcourt where Code =@filmCode
+														select @Amount = @Pricing * @NoOfPersons
+													end
+													else
+													begin
+														select @Pricing = WeekDayComboPrice from tk_GenesisPortHarcourt where Code =@filmCode
+														select @Amount = @Pricing * @NoOfPersons
+													end
+											end
+										else
+											begin
+												IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+													begin
+
+														if @PassedTime > @CurrentTime
+															begin
+																select @Pricing = WeekDayCutOffComboPrice from tk_GenesisPortHarcourt where Code =@filmCode
+																select @Amount = @Pricing * @NoOfPersons
+															end
+														else
+															begin
+																select @Pricing = WeekDayComboPrice from tk_GenesisPortHarcourt where Code =@filmCode
+																select @Amount = @Pricing * @NoOfPersons
+															end
+													end
+												else
+													begin
+														if @PassedTime > @CurrentTime
+															begin
+																select @Pricing = WeekDayCutOffComboPrice from tk_GenesisPortHarcourt where Code =@filmCode
+																select @Amount = @Pricing * @NoOfPersons
+															end
+														else
+															begin
+																select @Pricing = WeekDayComboPrice from tk_GenesisPortHarcourt where Code =@filmCode
+																select @Amount = @Pricing * @NoOfPersons
+															end
+													end
+											end
+									end
+							end
+
+					end
+
+				 if @MovieCategory =4
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOffVipPrice from tk_GenesisPortHarcourt where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekEndVIPPrice from tk_GenesisPortHarcourt where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekEndVIPPrice from tk_GenesisPortHarcourt where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+						else
+							begin
+								IF(@dayName = 'Wednesday')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisPortHarcourt where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisPortHarcourt where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+								begin
+									IF(@dayName = 'Testing')
+											begin
+												IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+												begin
+													select @Pricing = publicHolidayPrice from tk_GenesisPortHarcourt where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+												end
+												else
+												begin
+													select @Pricing = publicHolidayPrice from tk_GenesisPortHarcourt where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+												end
+											end
+									else
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+											begin
+
+												if @PassedTime > @CurrentTime
+												begin
+												select @Pricing =  WeekDayCutOffVipPrice from tk_GenesisPortHarcourt where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+												end
+												else
+												begin
+												select @Pricing =  WeekDayVIPPrice from tk_GenesisPortHarcourt where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+												end
+											end
+											else
+											begin
+												if @PassedTime > @CurrentTime
+												begin
+												select @Pricing =  WeekDayCutOffVipPrice from tk_GenesisPortHarcourt where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+												end
+												else
+												begin
+												select @Pricing =  WeekDayVIPPrice from tk_GenesisPortHarcourt where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+												end
+											end
+									end
+								end
+							end
+
+					end
+
+				 if @MovieCategory =3
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOff3D from tk_GenesisPortHarcourt where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+
+										select @Pricing = WeekEndThreeDPrice from tk_GenesisPortHarcourt where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+											select @Pricing = WeekEndThreeDPrice from tk_GenesisPortHarcourt where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+						else
+							begin
+								IF(@dayName = 'Wednesday')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisPortHarcourt where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisPortHarcourt where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+								begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOff3D from tk_GenesisPortHarcourt where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayThreeDPrice from tk_GenesisPortHarcourt where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									else
+										begin
+											select @Pricing = WeekDayThreeDPrice from tk_GenesisPortHarcourt where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+							end
+
+					end
+
+			 end
+
+
+			   if @CinemaCompanyID =3
+			 begin
+			   if @MovieCategory =1
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOffPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekendPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekendPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+							else
+							begin
+								IF(@dayName = 'Wednesday')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+									begin
+										IF(@dayName = 'Testing')
+											begin
+												IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+												begin
+													select @Pricing = publicHolidayPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+												end
+												else
+												begin
+													select @Pricing = publicHolidayPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+												end
+											end
+										else
+											begin
+												IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+													begin
+
+														if @PassedTime > @CurrentTime
+														begin
+														select @Pricing = WeekDayCutOffPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+														select @Amount = @Pricing * @NoOfPersons
+														end
+														else
+														begin
+														select @Pricing = WeekDayPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+														select @Amount = @Pricing * @NoOfPersons
+														end
+													end
+												else
+													begin
+														if @PassedTime > @CurrentTime
+															begin
+																select @Pricing = WeekDayCutOffPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+																select @Amount = @Pricing * @NoOfPersons
+															end
+														else
+															begin
+																select @Pricing = WeekDayPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+																select @Amount = @Pricing * @NoOfPersons
+															end
+													end
+											end
+									end
+							end
+
+					end
+
+			   if @MovieCategory =4
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOfFVipPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekEndVIPPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekEndVIPPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+						else
+							begin
+								IF(@dayName = 'Wednesday')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+								begin
+									IF(@dayName = 'Testing')
+											begin
+												IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+												begin
+													select @Pricing = publicHolidayPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+												end
+												else
+												begin
+													select @Pricing = publicHolidayPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+												end
+											end
+									else
+										begin
+											IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+											begin
+
+												if @PassedTime > @CurrentTime
+												begin
+												select @Pricing =  WeekDayCutOffVipPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+												end
+												else
+												begin
+												select @Pricing = WeekDayVIPPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+												end
+											end
+											else
+											begin
+												if @PassedTime > @CurrentTime
+												begin
+												select @Pricing =  WeekDayCutOffVipPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+												end
+												else
+												begin
+												select @Pricing = WeekDayVIPPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+												end
+											end
+										end
+								end
+							end
+
+					end
+
+			   if @MovieCategory =2
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOffComboPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekEndComboPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+											select @Pricing = WeekEndComboPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+						else
+							begin
+								IF(@dayName = 'Wednesday')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+											begin
+
+												if @PassedTime > @CurrentTime
+												begin
+												select @Pricing = WeekDayCutOffComboPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+												end
+												else
+												begin
+												select @Pricing = WeekDayComboPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+												end
+											end
+										else
+											begin
+												if @PassedTime > @CurrentTime
+												begin
+												select @Pricing = WeekDayCutOffComboPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+												end
+												else
+												begin
+												select @Pricing = WeekDayComboPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+												end
+											end
+									end
+								else
+								begin
+									if(@dayName = 'Testing')
+											begin
+													IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+
+													begin
+														select @Pricing = WeekDayComboPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+														select @Amount = @Pricing * @NoOfPersons
+													end
+													else
+													begin
+														select @Pricing = WeekDayComboPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+														select @Amount = @Pricing * @NoOfPersons
+													end
+											end
+									else
+										begin
+											IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+												begin
+
+													if @PassedTime > @CurrentTime
+													begin
+													select @Pricing = WeekDayCutOffComboPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+													else
+													begin
+													select @Pricing = WeekDayComboPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+												end
+											else
+												begin
+													if @PassedTime > @CurrentTime
+													begin
+													select @Pricing = WeekDayCutOffComboPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+													else
+													begin
+													select @Pricing = WeekDayComboPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+												end
+										end
+								end
+							end
+
+					end
+
+			   if @MovieCategory =3
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing =  WeekEndCutOff3D from tk_GenesisFilmsMaryland where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekEndThreeDPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekEndThreeDPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+							else
+							begin
+								IF(@dayName = 'Wednesday')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+								begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOff3D from tk_GenesisFilmsMaryland where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayThreeDPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOff3D from tk_GenesisFilmsMaryland where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayThreeDPrice from tk_GenesisFilmsMaryland where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+						
+											end
+										end
+									end
+							end
+
+					end
+
+			 end
+
+
+			    if @CinemaCompanyID =4
+			 begin
+				 if @MovieCategory =1
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOffPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekendPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekendPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+							else
+							begin
+								IF(@dayName = 'Wednesday')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+									begin
+										IF(@dayName = 'Testing')
+											begin
+												IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+												begin
+													select @Pricing = publicHolidayPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+												end
+												else
+												begin
+													select @Pricing = publicHolidayPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+												end
+											end
+										else
+											begin
+												IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+												begin
+
+													if @PassedTime > @CurrentTime
+													begin
+													select @Pricing = WeekDayCutOffPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+													else
+													begin
+													select @Pricing = WeekDayPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+												end
+											else
+												begin
+													if @PassedTime > @CurrentTime
+													begin
+													select @Pricing = WeekDayCutOffPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+													else
+													begin
+													select @Pricing = WeekDayPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+													end
+												end
+											end
+									end
+							end
+
+					end
+
+				 if @MovieCategory =4
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOffVipPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekEndVIPPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekEndVIPPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+							else
+							begin
+								IF(@dayName = 'Wednesday')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+								begin
+									IF(@dayName = 'Testing')
+											begin
+												IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+												begin
+													select @Pricing = publicHolidayPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+												end
+												else
+												begin
+													select @Pricing = publicHolidayPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+												end
+											end
+									else
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffVipPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayVIPPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffVipPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayVIPPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									end
+								end
+							end
+
+					end
+
+				 if @MovieCategory =2
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOffComboPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekEndComboPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekEndComboPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+							else
+							begin
+								IF(@dayName = 'Wednesday')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffComboPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayComboPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffComboPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayComboPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									end
+								else
+								begin
+									if(@dayName = 'Testing')
+											begin
+													IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+
+													begin
+														select @Pricing = WeekDayComboPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+														select @Amount = @Pricing * @NoOfPersons
+													end
+													else
+													begin
+														select @Pricing = WeekDayComboPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+														select @Amount = @Pricing * @NoOfPersons
+													end
+											end
+									else
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+											begin
+
+												if @PassedTime > @CurrentTime
+												begin
+												select @Pricing = WeekDayCutOffComboPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+												end
+												else
+												begin
+												select @Pricing = WeekDayComboPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+												end
+											end
+										else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffComboPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayComboPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									end
+								end
+							end
+
+					end
+
+				 if @MovieCategory =3
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOff3D from tk_GenesisFilmsAbuja where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekEndThreeDPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekEndThreeDPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+							else
+							begin
+								IF(@dayName = 'Wednesday')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+								begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing =  WeekDayCutOff3D from tk_GenesisFilmsAbuja where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing =  WeekDayThreeDPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing =  WeekDayCutOff3D from tk_GenesisFilmsAbuja where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing =  WeekDayThreeDPrice from tk_GenesisFilmsAbuja where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									end
+							end
+
+					end
+
+			 end
+
+
+			   if @CinemaCompanyID =5
+			 begin
+				 if @MovieCategory =1
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOffPrice from tk_GenesisFilmsWarri where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekendPrice from tk_GenesisFilmsWarri where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekendPrice from tk_GenesisFilmsWarri where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+						else
+							begin
+								IF(@dayName = 'Testing')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+											begin
+												select @Pricing = publicHolidayPrice from tk_GenesisFilmsWarri where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+											end
+										else
+											begin
+												select @Pricing = publicHolidayPrice from tk_GenesisFilmsWarri where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+											end 
+									end
+								else
+								begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffPrice from tk_GenesisFilmsWarri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayPrice from tk_GenesisFilmsWarri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffPrice from tk_GenesisFilmsWarri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayPrice from tk_GenesisFilmsWarri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									end
+							end
+
+					end
+
+				 if @MovieCategory =4
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOffVipPrice from tk_GenesisFilmsWarri where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekEndVIPPrice from tk_GenesisFilmsWarri where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekEndVIPPrice from tk_GenesisFilmsWarri where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+							else
+							begin
+								IF(@dayName = 'Testing')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = publicHolidayPrice from tk_GenesisFilmsWarri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = publicHolidayPrice from tk_GenesisFilmsWarri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+								begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffVipPrice from tk_GenesisFilmsWarri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayVIPPrice from tk_GenesisFilmsWarri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffVipPrice from tk_GenesisFilmsWarri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayVIPPrice from tk_GenesisFilmsWarri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									end
+							end
+
+					end
+
+				 if @MovieCategory =2
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOffComboPrice from tk_GenesisFilmsWarri where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekEndComboPrice from tk_GenesisFilmsWarri where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekEndComboPrice from tk_GenesisFilmsWarri where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+							else
+							begin
+								IF(@dayName = 'Testing')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = WeekDayComboPrice from tk_GenesisFilmsWarri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = WeekDayComboPrice from tk_GenesisFilmsWarri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+								begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffComboPrice from tk_GenesisFilmsWarri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayComboPrice from tk_GenesisFilmsWarri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffComboPrice from tk_GenesisFilmsWarri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayComboPrice from tk_GenesisFilmsWarri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									end
+							end
+
+					end
+
+				 if @MovieCategory =3
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOff3D from tk_GenesisFilmsWarri where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekEndThreeDPrice from tk_GenesisFilmsWarri where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekEndThreeDPrice from tk_GenesisFilmsWarri where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+							else
+							begin
+								IF(@dayName = 'testing')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsWarri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsWarri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+								begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOff3D from tk_GenesisFilmsWarri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayThreeDPrice from tk_GenesisFilmsWarri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOff3D from tk_GenesisFilmsWarri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayThreeDPrice from tk_GenesisFilmsWarri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									end
+							end
+
+					end
+
+			 end
+
+
+				if @CinemaCompanyID =6
+			 begin
+				 if @MovieCategory =1
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing =  WeekEndCutOffPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekendPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekendPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+							else
+							begin
+								IF(@dayName = 'Testing')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = publicHolidayPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = publicHolidayPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+								begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									end
+							end
+
+					end
+
+				 if @MovieCategory =4
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing =  WeekEndCutOffVipPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekEndVIPPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekEndVIPPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+						else
+							begin
+								IF(@dayName = 'Testing')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = publicHolidayPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = publicHolidayPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+								begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffVipPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayVIPPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffVipPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayVIPPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									end
+							end
+
+					end
+
+				 if @MovieCategory =2
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOffComboPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = WeekEndComboPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekEndComboPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+							else
+							begin
+								IF(@dayName = 'Testing')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = WeekDayComboPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = WeekDayComboPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+								begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffComboPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayComboPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffComboPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayComboPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									end
+							end
+
+					end
+
+				 if @MovieCategory =3
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOff3D from tk_GenesisFilmsOwerri where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekEndThreeDPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekEndThreeDPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+							else
+							begin
+								IF(@dayName = 'testing')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+								begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOff3D from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayThreeDPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOff3D from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayThreeDPrice from tk_GenesisFilmsOwerri where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									end
+							end
+
+					end
+
+			 end
+
+			 if @CinemaCompanyID =7
+			 begin
+				 if @MovieCategory =1
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOffPrice from tk_GenesisFilmsAjah where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekendPrice from tk_GenesisFilmsAjah where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekendPrice from tk_GenesisFilmsAjah where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+							else
+							begin
+								IF(@dayName = 'Wednesday')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+								begin
+									IF(@dayName = 'Testing')
+											begin
+												IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+												begin
+													select @Pricing = publicHolidayPrice from tk_GenesisFilmsAjah where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+												end
+												else
+												begin
+													select @Pricing = publicHolidayPrice from tk_GenesisFilmsAjah where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+												end
+											end
+									else
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffPrice from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayPrice from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffPrice from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayPrice from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									end
+								end
+							end
+
+					end
+
+				 if @MovieCategory =4
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOffVipPrice from tk_GenesisFilmsAjah where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekEndVIPPrice from tk_GenesisFilmsAjah where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekEndVIPPrice from tk_GenesisFilmsAjah where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+							else
+							begin
+								IF(@dayName = 'Wednesday')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+								begin
+									IF(@dayName = 'Testing')
+											begin
+												IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+												begin
+													select @Pricing = publicHolidayPrice from tk_GenesisFilmsAjah where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+												end
+												else
+												begin
+													select @Pricing = publicHolidayPrice from tk_GenesisFilmsAjah where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+												end
+											end
+									else
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffVipPrice from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayVIPPrice from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffVipPrice from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayVIPPrice from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									end
+								end
+							end
+
+					end
+
+				 if @MovieCategory =2
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOffComboPrice from tk_GenesisFilmsAjah where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekEndComboPrice from tk_GenesisFilmsAjah where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekEndComboPrice from tk_GenesisFilmsAjah where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+							else
+							begin
+								IF(@dayName = 'Wednesday')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffComboPrice from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayComboPrice from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffComboPrice from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayComboPrice from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									end
+								else
+								begin
+									if(@dayName = 'Testing')
+											begin
+													IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+
+													begin
+														select @Pricing = WeekDayComboPrice from tk_GenesisFilmsAjah where Code =@filmCode
+														select @Amount = @Pricing * @NoOfPersons
+													end
+													else
+													begin
+														select @Pricing = WeekDayComboPrice from tk_GenesisFilmsAjah where Code =@filmCode
+														select @Amount = @Pricing * @NoOfPersons
+													end
+											end
+									else
+										begin
+											IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffComboPrice from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayComboPrice from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffComboPrice from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayComboPrice from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										end
+								end
+							end
+
+					end
+
+				 if @MovieCategory =3
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOff3D from tk_GenesisFilmsAjah where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekEndThreeDPrice from tk_GenesisFilmsAjah where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekEndThreeDPrice from tk_GenesisFilmsAjah where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+							else
+							begin
+								IF(@dayName = 'Wednesday')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+								begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOff3D from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayThreeDPrice from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOff3D from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayThreeDPrice from tk_GenesisFilmsAjah where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									end
+							end
+
+					end
+
+			 end
+
+
+			  if @CinemaCompanyID =8
+			   begin
+				 if @MovieCategory =1
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOffPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekendPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekendPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+							else
+							begin
+								IF(@dayName = 'Testing')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = publicHolidayPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = publicHolidayPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+								begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									end
+							end
+
+					end
+
+				 if @MovieCategory =4
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOffVipPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekEndVIPPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekEndVIPPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+							else
+							begin
+								IF(@dayName = 'Testing')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = publicHolidayPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = publicHolidayPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+								begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffVipPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayVIPPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffVipPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayVIPPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									end
+							end
+
+					end
+
+				 if @MovieCategory =2
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOffComboPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekEndComboPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekEndComboPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+							else
+							begin
+								IF(@dayName = 'Testing')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = WeekDayComboPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = WeekDayComboPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+								begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffComboPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayComboPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffComboPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayComboPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									end
+							end
+
+					end
+
+				 if @MovieCategory =3
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOff3D from tk_GenesisFilmsAsaba where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekEndThreeDPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekEndThreeDPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+							else
+							begin
+								IF(@dayName = 'testing')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+								begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOff3D from tk_GenesisFilmsAsaba where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayThreeDPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOff3D from tk_GenesisFilmsAsaba where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayThreeDPrice from tk_GenesisFilmsAsaba where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									end
+							end
+
+					end
+
+			    end
+
+
+			  if @CinemaCompanyID =9
+				begin
+				 if @MovieCategory =1
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOffPrice from tk_GenesisFilmsGateway where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekendPrice from tk_GenesisFilmsGateway where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekendPrice from tk_GenesisFilmsGateway where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+						else
+							begin
+								IF(@dayName = 'Wednesday')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsGateway where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsGateway where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+								begin
+									IF(@dayName = 'Testing')
+											begin
+												IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+												begin
+													select @Pricing = publicHolidayPrice from tk_GenesisFilmsGateway where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+												end
+												else
+												begin
+													select @Pricing = publicHolidayPrice from tk_GenesisFilmsGateway where Code =@filmCode
+													select @Amount = @Pricing * @NoOfPersons
+												end
+											end
+									else
+										begin
+											IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffPrice from tk_GenesisFilmsGateway where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayPrice from tk_GenesisFilmsGateway where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffPrice from tk_GenesisFilmsGateway where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayPrice from tk_GenesisFilmsGateway where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										end
+								end
+							end
+					end
+				 if @MovieCategory =2
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOffComboPrice from tk_GenesisFilmsGateway where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekEndComboPrice from tk_GenesisFilmsGateway where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekEndComboPrice from tk_GenesisFilmsGateway where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+						else
+							begin
+								IF(@dayName = 'Wednesday')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+												if @PassedTime > @CurrentTime
+												begin
+												select @Pricing  = WeekDayCutOffComboPrice from tk_GenesisFilmsGateway where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+												end
+												else
+												begin
+												select @Pricing  = WeekDayComboPrice from tk_GenesisFilmsGateway where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+												end
+										end
+										else
+											begin
+												if @PassedTime > @CurrentTime
+												begin
+												select @Pricing  = WeekDayCutOffComboPrice from tk_GenesisFilmsGateway where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+												end
+												else
+												begin
+												select @Pricing  = WeekDayComboPrice from tk_GenesisFilmsGateway where Code =@filmCode
+												select @Amount = @Pricing * @NoOfPersons
+												end
+											end 
+									end
+								else
+								
+								begin
+									if(@dayName = 'Testing')
+											begin
+													IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+
+													begin
+														select @Pricing = WeekDayComboPrice from tk_GenesisFilmsGateway where Code =@filmCode
+														select @Amount = @Pricing * @NoOfPersons
+													end
+													else
+													begin
+														select @Pricing = WeekDayComboPrice from tk_GenesisFilmsGateway where Code =@filmCode
+														select @Amount = @Pricing * @NoOfPersons
+													end
+											end
+									else
+										begin
+											IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffComboPrice from tk_GenesisFilmsGateway where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayComboPrice from tk_GenesisFilmsGateway where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffComboPrice from tk_GenesisFilmsGateway where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayComboPrice from tk_GenesisFilmsGateway where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										end
+								end
+							end
+
+					end
+
+				 if @MovieCategory =4
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOffVipPrice from tk_GenesisFilmsGateway where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekEndVIPPrice from tk_GenesisFilmsGateway where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select WeekEndVIPPrice from tk_GenesisFilmsGateway where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+							else
+							begin
+								IF(@dayName = 'Testing')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = publicHolidayPrice from tk_GenesisFilmsGateway where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = publicHolidayPrice from tk_GenesisFilmsGateway where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+								begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffVipPrice from tk_GenesisFilmsGateway where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayVIPPrice from tk_GenesisFilmsGateway where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOffVipPrice from tk_GenesisFilmsGateway where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayVIPPrice from tk_GenesisFilmsGateway where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									end
+							end
+
+					end
+
+					if @MovieCategory =3
+					begin
+						
+						IF(@dayName = 'Saturday' OR @dayName = 'Sunday' OR @dayName='Friday') 
+							begin
+									IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+									begin
+
+										if @PassedTime > @CurrentTime
+										begin
+										select @Pricing = WeekEndCutOff3D from tk_GenesisFilmsGateway where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+										select @Pricing = WeekEndThreeDPrice from tk_GenesisFilmsGateway where Code =@filmCode
+										select @Amount = @Pricing * @NoOfPersons
+										end
+									end
+									else
+									begin
+										select @Pricing = WeekEndThreeDPrice from tk_GenesisFilmsGateway where Code =@filmCode
+									select @Amount = @Pricing * @NoOfPersons
+									end
+							end
+							else
+							begin
+								IF(@dayName = 'testing')
+									begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsGateway where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end
+										else
+										begin
+											select @Pricing = promoDayPrice from tk_GenesisFilmsGateway where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+										end 
+									end
+								else
+								begin
+										IF CAST(@Date AS DATE) = CAST(GETUTCDATE() AS DATE)
+										begin
+
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOff3D from tk_GenesisFilmsGateway where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayThreeDPrice from tk_GenesisFilmsGateway where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+										else
+										begin
+											if @PassedTime > @CurrentTime
+											begin
+											select @Pricing = WeekDayCutOff3D from tk_GenesisFilmsGateway where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+											else
+											begin
+											select @Pricing = WeekDayThreeDPrice from tk_GenesisFilmsGateway where Code =@filmCode
+											select @Amount = @Pricing * @NoOfPersons
+											end
+										end
+									end
+							end
+
+					end
+
+				end
+
+			
+			 select	@Amount Price
+
+
+END

@@ -1,0 +1,109 @@
+﻿@model IEnumerable<ICMATESTMOCKMVC.BAL.GenericModel.ViewModel.viewUsers>
+
+@{
+    ViewBag.Title = "Index";
+}
+<link href="~/Content/alertify.core.css" rel="stylesheet" />
+<link href="~/Content/alertify.default.css" rel="stylesheet" />
+
+<h2>List Of Users</h2>
+
+
+<div class="table-responsive">
+    <table class="table table-bordered table-striped table-hover">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.FirstName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.LastName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Email)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Gender)
+                </th>
+
+                <th>
+                    <a href="@Url.Action("AddOrEdit", "User")" class="btn btn-success"><i class="fa fa-plus-square"></i> User</a>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null)
+            {
+                foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.FirstName)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.LastName)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Email)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Gender)
+                        </td>
+
+                        <td>
+                            <a href="@Url.Action("AddOrEdit", "User", new { id = item.Id})" class="btn btn-info" id="btnEditUser"><i class="fa fa-marker fa-lg"></i> Edit</a> |
+                            <a class="btn btn-danger userDeleteBtn" href="javascript:void(0)" data-id="@item.Id"><i class="fa fa-trash-alt"></i> Delete</a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+
+</div>
+<script src="~/Scripts/jquery.min.js"></script>
+<script src="~/Content/alertify.min.js"></script>
+<script>
+
+    $(document).ready(function () {
+        //$("#btnEditUser").click(function () {
+        //    var id = $(this).attr("data-id");
+        //    console.log(id);
+        //    $.ajax({
+        //        url: "User/AddOrEdit",
+        //        data: { "id": id},
+        //        dataType: "json",
+        //        type: "GET",
+        //        success: function (data) {
+
+        //        }
+        //    });
+        //});
+
+        $(".userDeleteBtn").click(function () {
+            var id = $(this).attr("data-id");
+            console.log(id);
+
+            if (confirm('Are you sure want to delete?')) {
+                $.ajax({
+                    url: "/User/Delete",
+                    data: { "id": id },
+                    dataType: "json",
+                    type: "POST",
+                    success: function (response) {
+                        if (response.error == false) {
+                            alertify.success(response.message);
+                            alert(response.message);
+                            
+                        }
+                        else {
+                            alertify.error(response.message);
+                        
+                        }
+                    }
+                });
+            }
+        })
+    });
+</script>
+

@@ -1,0 +1,98 @@
+﻿@model ICMATESTMOCKMVC.BAL.GenericModel.ViewModel.viewAttemptCourse
+
+@{
+    ViewBag.Title = "AddOrEditAttemptCourse";
+}
+<link href="~/Content/alertify.core.css" rel="stylesheet" />
+<link href="~/Content/alertify.default.css" rel="stylesheet" />
+
+
+
+<div class="row" style="margin-top:40px;">
+    <div class="col-md-4">
+
+
+        @Html.AntiForgeryToken()
+
+
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+        <div class="form-group">
+            <label class="control-label">List of Student</label>
+            @Html.DropDownListFor(model => model.nameList,
+                                                  new SelectList(Model.drpUserList, "Value", "Text"), "--Select Name--", new { @class = "form-control", id = "nameList", data_required = "true" })
+
+            @*<span asp-validation-for="CourseName" class="text-danger"></span>*@@*<span asp-validation-for="CourseName" class="text-danger"></span>*@
+        </div>
+        <div class="form-group">
+            <label class="control-label">List of Courses</label>
+            @Html.DropDownListFor(model => model.courseList,
+                                                  new SelectList(Model.drpCourseList, "Value", "Text"), "--Select Course--", new { @class = "form-control", id = "courseList", data_required = "true" })
+        </div>
+
+        <div class="form-group">
+            <label class="control-label">Attempt Score</label>
+            
+            @*<input type="number" class="form-control" id="txtScore" value="" />*@
+            
+            @Html.EditorFor(model => model.Score, new { htmlAttributes = new { @class = "form-control txtScore", @placeholder = "Enter Score" } })
+            @Html.ValidationMessageFor(model => model.Score, "", new { @class = "text-danger" })
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <input type="submit" value="Submit" class="btn btn-primary btn-block" id="btnAttemptCourse" />
+            </div>
+
+            <div class="form-group col-md-6">
+                <a href="@Url.Action("Index", "AttemptCourse")" class="btn btn-default"><i class="fa fa-table"></i> Back to List</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="loaderbody" id="loaderbody" style="display:none;">
+    <div class="loader"></div>
+    <p style="text-align:center; color:blue;"><b>...loading please...</b></p>
+</div>
+<script src="~/Scripts/jquery.min.js"></script>
+<script src="~/Content/alertify.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+
+
+
+        $("#btnAttemptCourse").click(function (e) {
+            if ($("#nameList").val() === "" || $("#courseList").val() === "" || $(".txtScore").val() === "") {
+                alertify.error("One or Two Compulsory Fields is Required");
+                return;
+            }
+            e.preventDefault();
+
+            //console.log($("#courseList").val());
+
+            var course = $("#courseList").val();
+            var user = $("#nameList").val();
+            var scores = $("#txtScore").val();
+
+            $.ajax({
+                url: "/AttemptCourse/AddOrEditAttemptCourse",
+                data: { "courseId": course, "userId": user, "score": scores },
+                dataType: "json",
+                type: "POST",
+                success: function (response) {
+                    if (response.error == false) {
+                        alertify.success(response.message);
+                        alert(response.message);
+                        $("#txtScore").val("");
+                    } else {
+                        alertify.error(response.message);
+                        $("#txtScore").val("");
+                    }
+                }
+            });
+
+        });
+    });
+</script>
+

@@ -1,0 +1,49 @@
+﻿@model IEnumerable<ICMATESTMOCKMVC.DAL.Entity.Course>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Course</h2>
+
+
+<div class="table-responsive">
+    <table class="table table-hover table-bordered">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.course_id)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.course_name)
+                </th>
+
+                <th><a href="@Url.Action("AddCourse", "Course")" class="btn btn-success"><i class="fa fa-plus-square"></i> Course</a></th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @if (Model != null)
+            {
+                foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.course_id)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.course_name)
+                        </td>
+
+                        <td>
+                            
+                            <a href="@Url.Action("Delete", "Course", new { id = item.course_id})" class="btn btn-danger"><i class="fa fa-trash-alt"></i> Delete</a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+
+    </table>
+
+</div>
